@@ -2,8 +2,6 @@ package com.cooperfilme.roteiros.repository;
 
 import com.cooperfilme.roteiros.model.Roteiro;
 import com.cooperfilme.roteiros.model.RoteiroStatus;
-
-import org.springframework.cglib.core.Local;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
