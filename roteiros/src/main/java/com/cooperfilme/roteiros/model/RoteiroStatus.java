@@ -1,6 +1,6 @@
 package com.cooperfilme.roteiros.model;
 
-public enum ScriptStatus {
+public enum RoteiroStatus {
     AGUARDANDO_ANALISE,
     EM_ANALISE,
     AGUARDANDO_REVISAO,
