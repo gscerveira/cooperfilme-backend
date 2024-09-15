@@ -31,13 +31,7 @@ public class RoteiroServiceImpl implements RoteiroService {
         Roteiro roteiro = roteiroRepository.findById(roteiroId)
                 .orElseThrow(() -> new EntityNotFoundException("Roteiro não encontrado"));
 
-        if (!isValidStatusTransition(roteiro.getStatus(), newStatus, user)) {
-            throw new IllegalStateException("Transição de status inválida");
-        }
-
-        roteiro.setStatus(newStatus);
-        roteiro.setAssignedTo(user);
-        roteiro.setJustification(justification);
+        roteiro.transitionTo(newStatus, user, justification);
         return roteiroRepository.save(roteiro);
     }
 
@@ -64,10 +58,5 @@ public class RoteiroServiceImpl implements RoteiroService {
     @Override
     public Optional<Roteiro> getRoteiroById(Long id) {
         return roteiroRepository.findById(id);
-    }
-
-    private boolean isValidStatusTransition(RoteiroStatus currentStatus, RoteiroStatus newStatus, User user) {
-        // A lógica para transição de status será aplicada aqui
-        return true;
     }
 }
