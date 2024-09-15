@@ -3,6 +3,9 @@ package com.cooperfilme.roteiros.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import com.cooperfilme.roteiros.state.RoteiroState;
+import com.cooperfilme.roteiros.state.RoteiroStateFactory;
+
 public class Roteiro {
     
     @Id
@@ -114,7 +117,12 @@ public class Roteiro {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
-    } 
+    }
+
+    public void transitionTo(RoteiroStatus newStatus, User user, String justification) {
+        RoteiroState currentState = RoteiroStateFactory.getState(this.status);
+        currentState.transition(this, newStatus, user, justification);
+    }
 
 
 }
