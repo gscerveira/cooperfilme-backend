@@ -4,8 +4,6 @@ import com.cooperfilme.roteiros.model.Roteiro;
 import com.cooperfilme.roteiros.model.RoteiroStatus;
 import com.cooperfilme.roteiros.model.User;
 import com.cooperfilme.roteiros.repository.RoteiroRepository;
-
-import org.hibernate.annotations.DialectOverride.OverridesAnnotation;
 import org.springframework.stereotype.Service;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -13,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+@Service
 public class RoteiroServiceImpl implements RoteiroService {
 
     private final RoteiroRepository roteiroRepository;
