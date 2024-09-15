@@ -2,6 +2,7 @@ package com.cooperfilme.roteiros.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 import com.cooperfilme.roteiros.state.RoteiroState;
 import com.cooperfilme.roteiros.state.RoteiroStateFactory;
@@ -37,6 +38,11 @@ public class Roteiro {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "roteiro_id")
+    private Set<Vote> votes;
+
 
     // Construtores
 
@@ -117,6 +123,14 @@ public class Roteiro {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public Set<Vote> getVotes() {
+        return votes;
+    }
+
+    public void setVotes(Set<Vote> votes) {
+        this.votes = votes;
     }
 
     public void transitionTo(RoteiroStatus newStatus, User user, String justification) {
