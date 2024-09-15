@@ -83,10 +83,6 @@ public class RoteiroServiceImpl implements RoteiroService {
         roteiro.getVotes().removeIf(vote -> vote.getUser().equals(user));
         roteiro.getVotes().add(new Vote(user, approved));
 
-        if (roteiro.getStatus() == RoteiroStatus.AGUARDANDO_APROVACAO) {
-            roteiro.setStatus(RoteiroStatus.EM_APROVACAO);
-        }
-
         if (!approved) {
             roteiro.setStatus(RoteiroStatus.RECUSADO);
             return roteiroRepository.save(roteiro);

@@ -18,7 +18,6 @@ public class AguardandoAprovacaoState implements RoteiroState {
             throw new IllegalStateException("Transição inválida de AGUARDANDO_APROVACAO para " + newStatus);
         }
         roteiro.setStatus(newStatus);
-        roteiro.setJustification(justification);
     }
 
 }
