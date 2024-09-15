@@ -1,18 +1,21 @@
 package com.cooperfilme.roteiros.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import java.time.LocalDateTime;
 import java.util.Set;
 
 import com.cooperfilme.roteiros.state.RoteiroState;
 import com.cooperfilme.roteiros.state.RoteiroStateFactory;
 
+@Entity
 public class Roteiro {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "O conteúdo do roteiro não pode estar vazio")
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
@@ -20,12 +23,16 @@ public class Roteiro {
     @Column(nullable = false)
     private RoteiroStatus status;
 
+    @NotBlank(message = "O nome do cliente é obrigatório")
     @Column(nullable = false)
     private String clientName;
 
+    @NotBlank(message = "O email do cliente é obrigatório")
+    @Email(message = "Por favor, forneça um endereço de email válido")
     @Column(nullable = false)
     private String clientEmail;
 
+    @NotBlank(message = "O telefone do cliente é obrigatório")
     @Column(nullable = false)
     private String clientPhone;
 
@@ -125,6 +132,10 @@ public class Roteiro {
         return createdAt;
     }
 
+    public LocalDateTime setCreatedAt(LocalDateTime createdAt) {
+        return this.createdAt = createdAt;
+    }
+
     public Set<Vote> getVotes() {
         return votes;
     }
@@ -136,6 +147,17 @@ public class Roteiro {
     public void transitionTo(RoteiroStatus newStatus, User user, String justification) {
         RoteiroState currentState = RoteiroStateFactory.getState(this.status);
         currentState.transition(this, newStatus, user, justification);
+    }
+
+    public static Roteiro createNewSubmission(String content, String clientName, String clientEmail, String clientPhone) {
+        Roteiro roteiro = new Roteiro();
+        roteiro.setContent(content);
+        roteiro.setClientName(clientName);
+        roteiro.setClientEmail(clientEmail);
+        roteiro.setClientPhone(clientPhone);
+        roteiro.setStatus(RoteiroStatus.AGUARDANDO_ANALISE);
+        roteiro.setCreatedAt(LocalDateTime.now());
+        return roteiro;
     }
 
 

@@ -1,9 +1,7 @@
 package com.cooperfilme.roteiros.controller;
 
-import com.cooperfilme.roteiros.dto.RoteiroSubmissionRequest;
-import com.cooperfilme.roteiros.dto.RoteiroStatusUpdateRequest;
-import com.cooperfilme.roteiros.dto.RoteiroResponse;
 import com.cooperfilme.roteiros.model.Roteiro;
+import com.cooperfilme.roteiros.model.RoteiroStatus;
 import com.cooperfilme.roteiros.model.User;
 import com.cooperfilme.roteiros.service.RoteiroService;
 import com.cooperfilme.roteiros.service.UserService;
@@ -14,58 +12,58 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/roteiros")
 public class RoteiroController {
 
     private final RoteiroService roteiroService;
-    private final UserService userService;
 
     public RoteiroController(RoteiroService roteiroService, UserService userService) {
         this.roteiroService = roteiroService;
-        this.userService = userService;
     }
 
     @PostMapping("/submit")
-    public ResponseEntity<RoteiroResponse> submitRoteiro(@Valid @RequestBody RoteiroSubmissionRequest request) {
-        Roteiro roteiro = roteiroService.submitRoteiro(request.toRoteiro());
-        return ResponseEntity.ok(new RoteiroResponse.fromRoteiro(roteiro));
+    public ResponseEntity<Roteiro> submitRoteiro(@Valid @RequestBody Roteiro roteiro) {
+        return ResponseEntity.ok(roteiroService.submitRoteiro(roteiro));
     }
 
     @PutMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('ANALISTA', 'REVISOR', 'APROVADOR')")
-    public ResponseEntity<RoteiroResponse> updateRoteiroStatus(
+    public ResponseEntity<Roteiro> updateRoteiroStatus(
             @PathVariable Long id,
-            @Valid @RequestBody RoteiroStatusUpdateRequest request,
+            @Valid @RequestBody RoteiroStatus newStatus,
+            @RequestParam(required = false) String justification,
             @AuthenticationPrincipal User user) {
-        Roteiro updatedRoteiro = roteiroService.updateRoteiroStatus(id, request.getNewStatus(), user, request.getJustification());
-        return ResponseEntity.ok(RoteiroResponse.fromRoteiro(updatedRoteiro));
+        return ResponseEntity.ok(roteiroService.updateRoteiroStatus(id, newStatus, user, justification));
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ANALISTA', 'REVISOR', 'APROVADOR')")
-    public ResponseEntity<List<RoteiroResponse>> listRoteiros(
-            @RequestParam(required = false) String status,
+    public ResponseEntity<List<Roteiro>> listRoteiros(
+            @RequestParam(required = false) RoteiroStatus status,
             @RequestParam(required = false) String clientEmail,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate) {
-        List<Roteiro> roteiros = roteiroService.listRoteiros(status, clientEmail, startDate, endDate);
-        List<RoteiroResponse> response = roteiros.stream()
-                .map(RoteiroResponse::fromRoteiro)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                roteiroService.getRoteiroByStatusAndDateRangeAndClientEmail(status, startDate, endDate, clientEmail));
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ANALISTA', 'REVISOR', 'APROVADOR')")
+    public ResponseEntity<Roteiro> getRoteiroById(@PathVariable Long id) {
+        Optional<Roteiro> roteiro = roteiroService.getRoteiroById(id);
+        return roteiro.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping("/{id}/vote")
     @PreAuthorize("hasRole('APROVADOR')")
-    public ResponseEntity<RoteiroResponse> voteOnRoteiro(
+    public ResponseEntity<Roteiro> voteOnRoteiro(
             @PathVariable Long id,
             @RequestParam boolean approved,
             @AuthenticationPrincipal User user) {
-        Roteiro votedRoteiro = roteiroService.voteOnRoteiro(id, user, approved);
-        return ResponseEntity.ok(RoteiroResponse.fromRoteiro(votedRoteiro));
+        return ResponseEntity.ok(roteiroService.voteOnRoteiro(id, user, approved));
     }
 
 }

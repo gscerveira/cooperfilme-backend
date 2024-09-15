@@ -1,22 +1,30 @@
 package com.cooperfilme.roteiros.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 
+@Entity
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "O nome do usuário é obrigatório")
     @Column(nullable = false)
     private String name;
 
+    @NotBlank(message = "O email do usuário é obrigatório")
+    @Email(message = "Por favor, forneça um endereço de email válido")
     @Column(nullable = false, unique = true)
     private String email;
 
+    @NotBlank(message = "A senha é obrigatória")
+    @Size(min = 6, message = "A senha deve ter pelo menos 6 caracteres")
     @Column(nullable = false)
     private String password;
 
+    @NotNull(message = "O cargo do usuário é obrigatório")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserRole role;
@@ -68,6 +76,13 @@ public class User {
 
     public void setRole(UserRole role) {
         this.role = role;
+    }
+
+    public static User fromLoginRequest(String email, String password) {
+        User user = new User();
+        user.setEmail(email);
+        user.setPassword(password);
+        return user;
     }
 
     

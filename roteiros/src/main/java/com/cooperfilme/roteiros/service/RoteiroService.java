@@ -15,7 +15,7 @@ public interface RoteiroService {
     List<Roteiro> getRoteiroByStatus(RoteiroStatus status);
     List<Roteiro> getRoteiroByClientEmail(String clientEmail);
     List<Roteiro> getRoteiroByDateRange(LocalDateTime start, LocalDateTime end);
-    List<Roteiro> getRoteiroByStatusAndDateRangeAndClientEmail(RoteiroStatus status, LocalDateTime start, LocalDateTime end, String clientEmail);
+    List<Roteiro> getRoteiroByStatusAndDateRangeAndClientEmail(RoteiroStatus status, String start, String end, String clientEmail);
     Optional<Roteiro> getRoteiroById(Long id);
     Roteiro voteOnRoteiro(Long roteiroId, User user, boolean approved);
 }
