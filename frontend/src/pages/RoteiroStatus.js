@@ -17,7 +17,7 @@ const RoteiroStatus = () => {
         };
 
         fetchStatus();
-    } [id]);
+    }, [id]);
 
     return (
         <div>
