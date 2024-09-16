@@ -6,6 +6,8 @@ import com.cooperfilme.roteiros.model.User;
 import com.cooperfilme.roteiros.model.UserRole;
 import com.cooperfilme.roteiros.model.Vote;
 import com.cooperfilme.roteiros.repository.RoteiroRepository;
+
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -55,7 +57,29 @@ public class RoteiroServiceImpl implements RoteiroService {
 
     @Override
     public List<Roteiro> getRoteiroByStatusAndDateRangeAndClientEmail(RoteiroStatus status, LocalDateTime start, LocalDateTime end, String clientEmail) {
-        return roteiroRepository.findByStatusAndCreatedAtBetweenAndClientEmail(status, start, end, clientEmail);
+        if (status == null && start == null && end == null && (clientEmail == null || clientEmail.isEmpty())) {
+            return roteiroRepository.findAll();
+        }
+
+        Specification<Roteiro> spec = Specification.where(null);
+
+        if (status != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("status"), status));
+        }
+
+        if (start != null) {
+            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("createdAt"), start));
+        }
+
+        if (end != null) {
+            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("createdAt"), end));
+        }
+
+        if (clientEmail != null && !clientEmail.isEmpty()) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("clientEmail"), clientEmail));
+        }
+
+        return roteiroRepository.findAll(spec);
     }
 
     @Override
