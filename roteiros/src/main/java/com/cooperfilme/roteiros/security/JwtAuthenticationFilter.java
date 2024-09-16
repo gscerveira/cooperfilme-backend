@@ -60,7 +60,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
         Key key = Keys.hmacShaKeyFor(jwtConfig.getSecret().getBytes());
         String token = Jwts.builder()
-                .subject(((User) authResult.getPrincipal()).getEmail())
+                .subject(user.getEmail())
+                .claim("role", user.getRole().name())
                 .expiration(new Date(System.currentTimeMillis() + jwtConfig.getExpirationTime()))
                 .signWith(key)
                 .compact();
