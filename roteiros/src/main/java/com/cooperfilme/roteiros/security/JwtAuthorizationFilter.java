@@ -17,7 +17,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 
 
@@ -44,6 +43,11 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
         UsernamePasswordAuthenticationToken authentication = getAuthentication(request);
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
+        if (authentication != null) {
+            logger.debug("User authenticated: " + authentication.getName());
+        } else {
+            logger.debug("No authentication set");
+        }
         chain.doFilter(request, response);
     }
 

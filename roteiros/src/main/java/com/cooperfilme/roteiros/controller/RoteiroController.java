@@ -5,7 +5,8 @@ import com.cooperfilme.roteiros.model.RoteiroStatus;
 import com.cooperfilme.roteiros.model.User;
 import com.cooperfilme.roteiros.service.RoteiroService;
 import com.cooperfilme.roteiros.service.UserService;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,6 +24,7 @@ import java.util.Map;
 @RequestMapping("/api/roteiros")
 public class RoteiroController {
 
+    private static final Logger logger = LoggerFactory.getLogger(RoteiroController.class);
     private final RoteiroService roteiroService;
 
     public RoteiroController(RoteiroService roteiroService, UserService userService) {
@@ -41,6 +43,7 @@ public class RoteiroController {
             @Valid @RequestBody RoteiroStatus newStatus,
             @RequestParam(required = false) String justification,
             @AuthenticationPrincipal User user) {
+            logger.debug("Updating roteiro status. User: " + (user != null ? user.getEmail() : "null"));
         return ResponseEntity.ok(roteiroService.updateRoteiroStatus(id, newStatus, user, justification));
     }
 

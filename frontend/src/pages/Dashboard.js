@@ -24,6 +24,10 @@ const Dashboard = () => {
         'RECUSADO'
     ];
 
+    useEffect(() => {
+        fetchRoteiros();
+    }, []);
+
     const fetchRoteiros = async () => {
         try {
             const response = await api.get('/roteiros', { params: filters });
@@ -47,7 +51,7 @@ const Dashboard = () => {
 
     const handleStatusUpdate = async (id, newStatus) => {
         try {
-            await api.put(`/roteiros/${id}/status`, { status: newStatus });
+            await api.put(`/roteiros/${id}/status`, newStatus);
             fetchRoteiros();
         } catch (error) {
             console.error('Erro ao atualizar status:', error);
@@ -57,64 +61,71 @@ const Dashboard = () => {
 
     const handleVote = async (id, approved) => {
         try {
-            await api.post(`/roteiros/${id}/vote`, { approved });
+            await api.post(`/roteiros/${id}/vote?approved=${approved}`);
             fetchRoteiros();
         } catch (error) {
             console.error('Erro ao votar:', error);
-            setError('Erro ao votar. Verifique se você tem permissão para esta ação.');
+            setError('Erro ao votar. ' + (error.response?.data || 'Verifique se você tem permissão para esta ação.'));
         }
     };
 
     const renderActionButtons = (roteiro) => {
-        switch (currentUser.role) {
-            case 'ANALISTA':
-                if (roteiro.status === 'AGUARDANDO_ANALISE') {
-                    return (
-                        <button onClick={() => handleStatusUpdate(roteiro.id, 'EM_ANALISE')}>
-                            Iniciar Análise
-                        </button>
-                    );
-                } else if (roteiro.status === 'EM_ANALISE') {
-                    return (
-                        <>
-                            <button onClick={() => handleStatusUpdate(roteiro.id, 'AGUARDANDO_REVISAO')}>
-                                Enviar para Revisão
-                            </button>
-                            <button onClick={() => handleStatusUpdate(roteiro.id, 'RECUSADO')}>
-                                Recusar
-                            </button>
-                        </>
-                    );
-                }
-                break;
-            case 'REVISOR':
-                if (roteiro.status === 'AGUARDANDO_REVISAO') {
-                    return (
-                        <button onClick={() => handleStatusUpdate(roteiro.id, 'EM_REVISAO')}>
-                            Iniciar Revisão
-                        </button>
-                    );
-                } else if (roteiro.status === 'EM_REVISAO') {
-                    return (
-                        <button onClick={() => handleStatusUpdate(roteiro.id, 'AGUARDANDO_APROVACAO')}>
-                            Enviar para Aprovação
-                        </button>
-                    );
-                }
-                break;
-            case 'APROVADOR':
-                if (roteiro.status === 'AGUARDANDO_APROVACAO' || roteiro.status === 'EM_APROVACAO') {
-                    return (
-                        <>
-                            <button onClick={() => handleVote(roteiro.id, true)}>Aprovar</button>
-                            <button onClick={() => handleVote(roteiro.id, false)}>Recusar</button>
-                        </>
-                    );
-                }
-                break;
-            default:
-                return null;
+        const userRole = currentUser?.role;
+        const status = roteiro.status;
+
+        console.log('User Role:', userRole);
+        console.log('Roteiro Status:', status);
+
+        if (userRole === 'ANALISTA' && status === 'AGUARDANDO_ANALISE') {
+            return (
+                <button onClick={() => handleStatusUpdate(roteiro.id, 'EM_ANALISE')}>
+                    Iniciar Análise
+                </button>
+            );
         }
+
+        if (userRole === 'ANALISTA' && status === 'EM_ANALISE') {
+            return (
+                <>
+                    <button onClick={() => handleStatusUpdate(roteiro.id, 'AGUARDANDO_REVISAO')}>
+                        Enviar para Revisão
+                    </button>
+                    <button onClick={() => handleStatusUpdate(roteiro.id, 'RECUSADO')}>
+                        Recusar
+                    </button>
+                </>
+            );
+        }
+
+        if (userRole === 'REVISOR' && status === 'AGUARDANDO_REVISAO') {
+            return (
+                <button onClick={() => handleStatusUpdate(roteiro.id, 'EM_REVISAO')}>
+                    Iniciar Revisão
+                </button>
+            );
+        }
+
+        if (userRole === 'REVISOR' && status === 'EM_REVISAO') {
+            return (
+                <button onClick={() => handleStatusUpdate(roteiro.id, 'AGUARDANDO_APROVACAO')}>
+                    Enviar para Aprovação
+                </button>
+            );
+        }
+
+        if (userRole === 'APROVADOR' && (status === 'AGUARDANDO_APROVACAO' || status === 'EM_APROVACAO')) {
+            const hasVoted = roteiro.votes?.some(vote => vote.user.id === currentUser.id);
+            if (!hasVoted) {
+                return (
+                    <>
+                        <button onClick={() => handleVote(roteiro.id, true)}>Aprovar</button>
+                        <button onClick={() => handleVote(roteiro.id, false)}>Recusar</button>
+                    </>
+                );
+            }
+        }
+
+        return null;
     };
 
     return (
@@ -158,9 +169,8 @@ const Dashboard = () => {
             ) : (
                 <ul>
                     {roteiros.map((roteiro) => (
-                        <li key={roteiro.id} style={{ marginBottom: '20px', borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>
+                        <li key={roteiro.id} style={{marginBottom: '20px', borderBottom: '1px solid #ccc', paddingBottom: '10px'}}>
                             <h3>Roteiro ID: {roteiro.id}</h3>
-                            <p><strong>Título:</strong> {roteiro.title}</p>
                             <p><strong>Status:</strong> {roteiro.status}</p>
                             <p><strong>Conteúdo:</strong> {roteiro.content}</p>
                             <p><strong>Cliente:</strong> {roteiro.clientName}</p>
@@ -169,6 +179,9 @@ const Dashboard = () => {
                             <p><strong>Data de Criação:</strong> {new Date(roteiro.createdAt).toLocaleString()}</p>
                             <p><strong>Atribuído a:</strong> {roteiro.assignedTo ? roteiro.assignedTo.name : 'Não atribuído'}</p>
                             <p><strong>Justificativa:</strong> {roteiro.justification || 'Nenhuma justificativa fornecida'}</p>
+                            {roteiro.votes && (
+                                <p><strong>Votos:</strong> {roteiro.votes.length} / 3</p>
+                            )}
                             {renderActionButtons(roteiro)}
                         </li>
                     ))}
