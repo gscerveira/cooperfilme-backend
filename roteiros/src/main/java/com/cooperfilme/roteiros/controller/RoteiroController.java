@@ -5,6 +5,7 @@ import com.cooperfilme.roteiros.model.RoteiroStatus;
 import com.cooperfilme.roteiros.model.User;
 import com.cooperfilme.roteiros.service.RoteiroService;
 import com.cooperfilme.roteiros.service.UserService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,6 +17,7 @@ import java.time.format.DateTimeParseException;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/roteiros")
@@ -85,6 +87,16 @@ public class RoteiroController {
             @RequestParam boolean approved,
             @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(roteiroService.voteOnRoteiro(id, user, approved));
+    }
+
+     @GetMapping("/status/{id}")
+    public ResponseEntity<?> getRoteiroStatus(@PathVariable Long id) {
+        Optional<Roteiro> roteiro = roteiroService.getRoteiroById(id);
+        if (roteiro.isPresent()) {
+            return ResponseEntity.ok(Map.of("status", roteiro.get().getStatus()));
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
 }
