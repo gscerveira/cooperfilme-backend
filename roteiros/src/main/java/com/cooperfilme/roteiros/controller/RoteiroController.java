@@ -3,6 +3,7 @@ package com.cooperfilme.roteiros.controller;
 import com.cooperfilme.roteiros.model.Roteiro;
 import com.cooperfilme.roteiros.model.RoteiroStatus;
 import com.cooperfilme.roteiros.model.User;
+import com.cooperfilme.roteiros.model.UserRole;
 import com.cooperfilme.roteiros.service.RoteiroService;
 import com.cooperfilme.roteiros.service.UserService;
 import org.slf4j.Logger;
@@ -42,9 +43,16 @@ public class RoteiroController {
             @PathVariable Long id,
             @Valid @RequestBody RoteiroStatus newStatus,
             @RequestParam(required = false) String justification,
+            @RequestParam(required = false) String reviewerComments,
             @AuthenticationPrincipal User user) {
-            logger.debug("Updating roteiro status. User: " + (user != null ? user.getEmail() : "null"));
-        return ResponseEntity.ok(roteiroService.updateRoteiroStatus(id, newStatus, user, justification));
+        Roteiro updatedRoteiro = roteiroService.updateRoteiroStatus(id, newStatus, user, justification);
+        
+        if (user.getRole() == UserRole.REVISOR && newStatus == RoteiroStatus.AGUARDANDO_APROVACAO && reviewerComments != null) {
+            updatedRoteiro = roteiroService.updateRoteiroWithReviewerComments(id, newStatus, reviewerComments, user);
+        } else {
+            updatedRoteiro = roteiroService.updateRoteiroStatus(id, newStatus, user, justification);
+        }
+        return ResponseEntity.ok(updatedRoteiro);
     }
 
     @GetMapping
@@ -64,15 +72,17 @@ public class RoteiroController {
             if (startDate != null && !startDate.isEmpty()) {
                 start = LocalDateTime.parse(startDate, formatter);
             }
-            
+
             if (endDate != null && !endDate.isEmpty()) {
                 end = LocalDateTime.parse(endDate, formatter);
             }
         } catch (DateTimeParseException e) {
-            return ResponseEntity.badRequest().body("Invalid date format. Please use ISO_DATE_TIME format (e.g., '2024-03-21T12:00:00')");
+            return ResponseEntity.badRequest()
+                    .body("Invalid date format. Please use ISO_DATE_TIME format (e.g., '2024-03-21T12:00:00')");
         }
-        
-        List<Roteiro> roteiros = roteiroService.getRoteiroByStatusAndDateRangeAndClientEmail(status, start, end, clientEmail);
+
+        List<Roteiro> roteiros = roteiroService.getRoteiroByStatusAndDateRangeAndClientEmail(status, start, end,
+                clientEmail);
         return ResponseEntity.ok(roteiros);
     }
 
@@ -92,7 +102,7 @@ public class RoteiroController {
         return ResponseEntity.ok(roteiroService.voteOnRoteiro(id, user, approved));
     }
 
-     @GetMapping("/status/{id}")
+    @GetMapping("/status/{id}")
     public ResponseEntity<?> getRoteiroStatus(@PathVariable Long id) {
         Optional<Roteiro> roteiro = roteiroService.getRoteiroById(id);
         if (roteiro.isPresent()) {
@@ -100,6 +110,16 @@ public class RoteiroController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @PutMapping("/{id}/reviewer-comments")
+    @PreAuthorize("hasAuthority('REVISOR')")
+    public ResponseEntity<Roteiro> addReviewerComments(
+            @PathVariable Long id,
+            @Valid @RequestBody RoteiroStatus newStatus,
+            @RequestBody String reviewerComments,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(roteiroService.updateRoteiroWithReviewerComments(id, newStatus, reviewerComments, user));
     }
 
 }

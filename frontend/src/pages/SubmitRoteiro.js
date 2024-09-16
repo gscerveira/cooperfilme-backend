@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import api from '../services/apiService';
 
 const SubmitRoteiro = () => {
+    const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [clientName, setClientName] = useState('');
     const [clientEmail, setClientEmail] = useState('');
@@ -14,6 +15,7 @@ const SubmitRoteiro = () => {
         setError(null);
         try {
             const response = await api.post('/roteiros/submit', {
+                title,
                 content,
                 clientName,
                 clientEmail,
@@ -36,6 +38,13 @@ const SubmitRoteiro = () => {
         <div>
             <h1>Enviar Roteiro</h1>
             <form onSubmit={handleSubmit}>
+                <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder='Título do roteiro'
+                    required
+                />
                 <textarea
                     value={content}
                     onChange={(e) => setContent(e.target.value)}

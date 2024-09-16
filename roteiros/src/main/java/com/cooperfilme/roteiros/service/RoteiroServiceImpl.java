@@ -4,6 +4,7 @@ import com.cooperfilme.roteiros.model.Roteiro;
 import com.cooperfilme.roteiros.model.RoteiroStatus;
 import com.cooperfilme.roteiros.model.User;
 import com.cooperfilme.roteiros.model.UserRole;
+import com.cooperfilme.roteiros.repository.UserRepository;
 import com.cooperfilme.roteiros.model.Vote;
 import com.cooperfilme.roteiros.repository.RoteiroRepository;
 
@@ -20,9 +21,11 @@ import java.util.HashSet;
 public class RoteiroServiceImpl implements RoteiroService {
 
     private final RoteiroRepository roteiroRepository;
+    private final UserRepository userRepository;
 
-    public RoteiroServiceImpl(RoteiroRepository roteiroRepository) {
+    public RoteiroServiceImpl(RoteiroRepository roteiroRepository, UserRepository userRepository) {
         this.roteiroRepository = roteiroRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -35,6 +38,18 @@ public class RoteiroServiceImpl implements RoteiroService {
     public Roteiro updateRoteiroStatus(Long roteiroId, RoteiroStatus newStatus, User user, String justification) {
         Roteiro roteiro = roteiroRepository.findById(roteiroId)
                 .orElseThrow(() -> new EntityNotFoundException("Roteiro não encontrado"));
+
+        if (roteiro.getStatus() == newStatus) {
+            return roteiro;
+        }
+
+        if (user.getId() == null) {
+            user = userRepository.findByEmail(user.getEmail())
+                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        } else {
+            user = userRepository.findById(user.getId())
+                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        }
 
         roteiro.transitionTo(newStatus, user, justification);
         return roteiroRepository.save(roteiro);
@@ -56,7 +71,8 @@ public class RoteiroServiceImpl implements RoteiroService {
     }
 
     @Override
-    public List<Roteiro> getRoteiroByStatusAndDateRangeAndClientEmail(RoteiroStatus status, LocalDateTime start, LocalDateTime end, String clientEmail) {
+    public List<Roteiro> getRoteiroByStatusAndDateRangeAndClientEmail(RoteiroStatus status, LocalDateTime start,
+            LocalDateTime end, String clientEmail) {
         if (status == null && start == null && end == null && (clientEmail == null || clientEmail.isEmpty())) {
             return roteiroRepository.findAll();
         }
@@ -92,8 +108,10 @@ public class RoteiroServiceImpl implements RoteiroService {
         Roteiro roteiro = roteiroRepository.findById(roteiroId)
                 .orElseThrow(() -> new EntityNotFoundException("Roteiro não encontrado"));
 
-        if (roteiro.getStatus() != RoteiroStatus.AGUARDANDO_APROVACAO && roteiro.getStatus() != RoteiroStatus.EM_APROVACAO) {
-            throw new IllegalStateException("A votação só é permitida para roteiros nos estados AGUARDANDO_APROVACAO ou EM_APROVACAO");
+        if (roteiro.getStatus() != RoteiroStatus.AGUARDANDO_APROVACAO
+                && roteiro.getStatus() != RoteiroStatus.EM_APROVACAO) {
+            throw new IllegalStateException(
+                    "A votação só é permitida para roteiros nos estados AGUARDANDO_APROVACAO ou EM_APROVACAO");
         }
 
         if (user.getRole() != UserRole.APROVADOR) {
@@ -121,6 +139,26 @@ public class RoteiroServiceImpl implements RoteiroService {
             }
         }
 
+        return roteiroRepository.save(roteiro);
+    }
+
+    @Override
+    public Roteiro updateRoteiroWithReviewerComments(Long roteiroId, RoteiroStatus newStatus, String reviewerComments,
+            User user) {
+        Roteiro roteiro = roteiroRepository.findById(roteiroId)
+                .orElseThrow(() -> new EntityNotFoundException("Roteiro não encontrado"));
+
+        if (user.getRole() != UserRole.REVISOR) {
+            throw new IllegalStateException("Apenas revisores podem adicionar comentários a roteiros em revisão");
+        }
+
+        if (roteiro.getStatus() != RoteiroStatus.EM_REVISAO && newStatus != RoteiroStatus.AGUARDANDO_APROVACAO) {
+            throw new IllegalStateException("Comentários só podem ser adicionados a roteiros em revisão ou ao enviar para aprovação");
+        }
+
+        roteiro.setReviewerComments(reviewerComments);
+        roteiro.setStatus(newStatus);
+        roteiro.setAssignedTo(null); // Clear the assigned user as it's moving to a new stage
         return roteiroRepository.save(roteiro);
     }
 }

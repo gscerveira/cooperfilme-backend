@@ -10,6 +10,12 @@ const Dashboard = () => {
         endDate: '',
         clientEmail: ''
     });
+    const [justification, setJustification] = useState('');
+    const [showJustificationModal, setShowJustificationModal] = useState(false);
+    const [pendingAction, setPendingAction] = useState(null);
+    const [reviewerComments, setReviewerComments] = useState('');
+    const [showReviewerCommentsModal, setShowReviewerCommentsModal] = useState(false);
+
     const [error, setError] = useState(null);
     const currentUser = getCurrentUser();
 
@@ -50,8 +56,36 @@ const Dashboard = () => {
     };
 
     const handleStatusUpdate = async (id, newStatus) => {
+        if (currentUser.role === 'ANALISTA' && newStatus !== 'EM_ANALISE') {
+            setShowJustificationModal(true);
+            setPendingAction({ id, newStatus });
+        } else if (currentUser.role === 'REVISOR' && newStatus === 'AGUARDANDO_APROVACAO') {
+            setShowReviewerCommentsModal(true);
+            setPendingAction({ id, newStatus });
+        }
+        else {
+            try {
+                await api.put(`/roteiros/${id}/status`, newStatus);
+                fetchRoteiros();
+            } catch (error) {
+                console.error('Erro ao atualizar status:', error);
+                setError('Erro ao atualizar status. Verifique se você tem permissão para esta ação.');
+            }
+        }
+    };
+
+    const handleJustificationSubmit = async () => {
+        if (!justification.trim()) {
+            setError('A justificativa é obrigatória.');
+            return;
+        }
         try {
-            await api.put(`/roteiros/${id}/status`, newStatus);
+            await api.put(`/roteiros/${pendingAction.id}/status`, pendingAction.newStatus, {
+                params: { justification }
+            });
+            setShowJustificationModal(false);
+            setJustification('');
+            setPendingAction(null);
             fetchRoteiros();
         } catch (error) {
             console.error('Erro ao atualizar status:', error);
@@ -66,6 +100,25 @@ const Dashboard = () => {
         } catch (error) {
             console.error('Erro ao votar:', error);
             setError('Erro ao votar. ' + (error.response?.data || 'Verifique se você tem permissão para esta ação.'));
+        }
+    };
+
+    const handleReviewerCommentsSubmit = async () => {
+        if (!reviewerComments.trim()) {
+            setError('Os comentários do revisor são obrigatórios.');
+            return;
+        }
+        try {
+            await api.put(`/roteiros/${pendingAction.id}/status`, pendingAction.newStatus, {
+                params: { reviewerComments }
+            });
+            setShowReviewerCommentsModal(false);
+            setReviewerComments('');
+            setPendingAction(null);
+            fetchRoteiros();
+        } catch (error) {
+            console.error('Erro ao atualizar status:', error);
+            setError('Erro ao atualizar status. Verifique se você tem permissão para esta ação.');
         }
     };
 
@@ -125,6 +178,7 @@ const Dashboard = () => {
             }
         }
 
+
         return null;
     };
 
@@ -169,8 +223,9 @@ const Dashboard = () => {
             ) : (
                 <ul>
                     {roteiros.map((roteiro) => (
-                        <li key={roteiro.id} style={{marginBottom: '20px', borderBottom: '1px solid #ccc', paddingBottom: '10px'}}>
+                        <li key={roteiro.id} style={{ marginBottom: '20px', borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>
                             <h3>Roteiro ID: {roteiro.id}</h3>
+                            <p><strong>Título:</strong> {roteiro.title}</p>
                             <p><strong>Status:</strong> {roteiro.status}</p>
                             <p><strong>Conteúdo:</strong> {roteiro.content}</p>
                             <p><strong>Cliente:</strong> {roteiro.clientName}</p>
@@ -186,6 +241,52 @@ const Dashboard = () => {
                         </li>
                     ))}
                 </ul>
+            )}
+
+            {showReviewerCommentsModal && (
+                <div className="modal">
+                    <h2>Comentários do Revisor</h2>
+                    <textarea
+                        value={reviewerComments}
+                        onChange={(e) => setReviewerComments(e.target.value)}
+                        placeholder="Digite os comentários, erros encontrados ou novas ideias"
+                        required
+                    />
+                    <button onClick={handleReviewerCommentsSubmit}>Enviar</button>
+                    <button onClick={() => {
+                        setShowReviewerCommentsModal(false);
+                        setReviewerComments('');
+                        setPendingAction(null);
+                    }}>Cancelar</button>
+                </div>
+            )}
+
+            {showJustificationModal && (
+                <div className="modal" style={{
+                    position: 'fixed',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    backgroundColor: 'white',
+                    padding: '20px',
+                    boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+                    zIndex: 1000
+                }}>
+                    <h2>Justificativa</h2>
+                    <textarea
+                        value={justification}
+                        onChange={(e) => setJustification(e.target.value)}
+                        placeholder="Digite a justificativa"
+                        required
+                        style={{ width: '100%', minHeight: '100px' }}
+                    />
+                    <button onClick={handleJustificationSubmit}>Enviar</button>
+                    <button onClick={() => {
+                        setShowJustificationModal(false);
+                        setJustification('');
+                        setPendingAction(null);
+                    }}>Cancelar</button>
+                </div>
             )}
         </div>
     );

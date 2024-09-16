@@ -13,8 +13,8 @@ public class RoteiroStateFactory {
         states.put(RoteiroStatus.EM_APROVACAO, new EmAprovacaoState());
         states.put(RoteiroStatus.APROVADO, new AprovadoState());
         states.put(RoteiroStatus.RECUSADO, new RecusadoState());
-        states.put(RoteiroStatus.EM_REVISAO, new AguardandoRevisaoState());
-        states.put(RoteiroStatus.AGUARDANDO_REVISAO, new EmRevisaoState());
+        states.put(RoteiroStatus.EM_REVISAO, new EmRevisaoState());
+        states.put(RoteiroStatus.AGUARDANDO_REVISAO, new AguardandoRevisaoState());
         states.put(RoteiroStatus.EM_ANALISE, new EmAnaliseState());
         states.put(RoteiroStatus.AGUARDANDO_APROVACAO, new AguardandoAprovacaoState());
     }

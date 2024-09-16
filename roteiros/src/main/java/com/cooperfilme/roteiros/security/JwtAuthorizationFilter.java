@@ -66,11 +66,13 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 
                 String email = claimsJws.getPayload().getSubject();
                 String role = (String) claimsJws.getPayload().get("role");
+                Long userId = claimsJws.getPayload().get("userId", Long.class);
 
                 if (email != null) {
                     User user = new User();
                     user.setEmail(email);
                     user.setRole(UserRole.valueOf(role));
+                    user.setId(userId);
                     return new UsernamePasswordAuthenticationToken(user,
                             null,
                             Collections.singletonList(new SimpleGrantedAuthority(role)));

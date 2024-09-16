@@ -50,6 +50,9 @@ public class Roteiro {
     @JoinColumn(name = "roteiro_id")
     private Set<Vote> votes;
 
+    @Column(columnDefinition = "TEXT")
+    private String reviewerComments;
+
 
     // Construtores
 
@@ -142,6 +145,14 @@ public class Roteiro {
 
     public void setVotes(Set<Vote> votes) {
         this.votes = votes;
+    }
+
+    public String getReviewerComments() {
+        return reviewerComments;
+    }
+
+    public void setReviewerComments(String reviewerComments) {
+        this.reviewerComments = reviewerComments;
     }
 
     public void transitionTo(RoteiroStatus newStatus, User user, String justification) {

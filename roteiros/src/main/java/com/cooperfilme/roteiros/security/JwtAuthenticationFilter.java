@@ -67,6 +67,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String token = Jwts.builder()
                 .subject(user.getEmail())
                 .claim("role", user.getRole().name())
+                .claim("userId", user.getId())
                 .expiration(new Date(System.currentTimeMillis() + jwtConfig.getExpirationTime()))
                 .signWith(key)
                 .compact();
