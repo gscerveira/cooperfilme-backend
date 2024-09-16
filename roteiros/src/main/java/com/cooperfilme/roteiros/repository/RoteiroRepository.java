@@ -15,8 +15,8 @@ public interface RoteiroRepository extends JpaRepository<Roteiro, Long> {
     List<Roteiro> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
     List<Roteiro> findByStatusAndCreatedAtBetweenAndClientEmail(
         RoteiroStatus status,
-        LocalDateTime start,
-        LocalDateTime end,
+        String start,
+        String end,
         String clientEmail
     );
 }
