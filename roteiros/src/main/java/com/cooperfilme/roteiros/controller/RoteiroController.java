@@ -33,7 +33,7 @@ public class RoteiroController {
     }
 
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ANALISTA', 'REVISOR', 'APROVADOR')")
+    @PreAuthorize("hasAnyAuthority('ANALISTA', 'REVISOR', 'APROVADOR')")
     public ResponseEntity<Roteiro> updateRoteiroStatus(
             @PathVariable Long id,
             @Valid @RequestBody RoteiroStatus newStatus,
@@ -43,7 +43,7 @@ public class RoteiroController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ANALISTA', 'REVISOR', 'APROVADOR')")
+    @PreAuthorize("hasAnyAuthority('ANALISTA', 'REVISOR', 'APROVADOR')")
     public ResponseEntity<?> listRoteiros(
             @RequestParam(required = false) RoteiroStatus status,
             @RequestParam(required = false) String clientEmail,
@@ -72,14 +72,14 @@ public class RoteiroController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ANALISTA', 'REVISOR', 'APROVADOR')")
+    @PreAuthorize("hasAnyAuthority('ANALISTA', 'REVISOR', 'APROVADOR')")
     public ResponseEntity<Roteiro> getRoteiroById(@PathVariable Long id) {
         Optional<Roteiro> roteiro = roteiroService.getRoteiroById(id);
         return roteiro.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping("/{id}/vote")
-    @PreAuthorize("hasRole('APROVADOR')")
+    @PreAuthorize("hasAuthority('APROVADOR')")
     public ResponseEntity<Roteiro> voteOnRoteiro(
             @PathVariable Long id,
             @RequestParam boolean approved,

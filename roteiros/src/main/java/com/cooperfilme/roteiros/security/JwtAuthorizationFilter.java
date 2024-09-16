@@ -9,6 +9,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 import jakarta.servlet.FilterChain;
@@ -17,6 +18,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+
 
 public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 
@@ -56,9 +59,12 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
                         .parseSignedClaims(token);
 
                 String user = claimsJws.getPayload().getSubject();
+                String role = (String) claimsJws.getPayload().get("role");
 
                 if (user != null) {
-                    return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
+                    return new UsernamePasswordAuthenticationToken(user,
+                    null,
+                    Collections.singletonList(new SimpleGrantedAuthority(role)));
                 }
             } catch (JwtException e) {
                 logger.error("Não foi possível fazer parse do token JWT", e);
