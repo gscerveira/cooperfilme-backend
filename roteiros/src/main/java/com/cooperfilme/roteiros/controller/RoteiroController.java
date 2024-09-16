@@ -10,6 +10,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
@@ -41,13 +44,31 @@ public class RoteiroController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ANALISTA', 'REVISOR', 'APROVADOR')")
-    public ResponseEntity<List<Roteiro>> listRoteiros(
+    public ResponseEntity<?> listRoteiros(
             @RequestParam(required = false) RoteiroStatus status,
             @RequestParam(required = false) String clientEmail,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate) {
-        return ResponseEntity.ok(
-                roteiroService.getRoteiroByStatusAndDateRangeAndClientEmail(status, startDate, endDate, clientEmail));
+
+        LocalDateTime start = null;
+        LocalDateTime end = null;
+
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+
+        try {
+            if (startDate != null && !startDate.isEmpty()) {
+                start = LocalDateTime.parse(startDate, formatter);
+            }
+            
+            if (endDate != null && !endDate.isEmpty()) {
+                end = LocalDateTime.parse(endDate, formatter);
+            }
+        } catch (DateTimeParseException e) {
+            return ResponseEntity.badRequest().body("Invalid date format. Please use ISO_DATE_TIME format (e.g., '2024-03-21T12:00:00')");
+        }
+        
+        List<Roteiro> roteiros = roteiroService.getRoteiroByStatusAndDateRangeAndClientEmail(status, start, end, clientEmail);
+        return ResponseEntity.ok(roteiros);
     }
 
     @GetMapping("/{id}")

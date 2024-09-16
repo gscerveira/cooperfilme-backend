@@ -54,7 +54,7 @@ public class RoteiroServiceImpl implements RoteiroService {
     }
 
     @Override
-    public List<Roteiro> getRoteiroByStatusAndDateRangeAndClientEmail(RoteiroStatus status, String start, String end, String clientEmail) {
+    public List<Roteiro> getRoteiroByStatusAndDateRangeAndClientEmail(RoteiroStatus status, LocalDateTime start, LocalDateTime end, String clientEmail) {
         return roteiroRepository.findByStatusAndCreatedAtBetweenAndClientEmail(status, start, end, clientEmail);
     }
 
