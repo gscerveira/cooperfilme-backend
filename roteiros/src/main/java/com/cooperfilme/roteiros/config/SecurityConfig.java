@@ -1,7 +1,9 @@
 package com.cooperfilme.roteiros.config;
 
+import com.cooperfilme.roteiros.model.User;
 import com.cooperfilme.roteiros.security.JwtAuthenticationFilter;
 import com.cooperfilme.roteiros.security.JwtAuthorizationFilter;
+import com.cooperfilme.roteiros.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,14 +21,17 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtConfig jwtConfig;
+    private final UserService userService;
 
     public SecurityConfig(JwtConfig jwtConfig) {
         this.jwtConfig = jwtConfig;
+        this.userService = null;
     }
+
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
-        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager, jwtConfig);
+        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager, jwtConfig, userService);
         jwtAuthenticationFilter.setFilterProcessesUrl("/api/auth/login");
 
         http
