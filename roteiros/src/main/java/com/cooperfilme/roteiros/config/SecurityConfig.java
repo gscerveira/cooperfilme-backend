@@ -23,9 +23,9 @@ public class SecurityConfig {
     private final JwtConfig jwtConfig;
     private final UserService userService;
 
-    public SecurityConfig(JwtConfig jwtConfig) {
+    public SecurityConfig(JwtConfig jwtConfig, UserService userService) {
         this.jwtConfig = jwtConfig;
-        this.userService = null;
+        this.userService = userService;
     }
 
 
