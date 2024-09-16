@@ -1,6 +1,9 @@
 package com.cooperfilme.roteiros.security;
 
 import com.cooperfilme.roteiros.config.JwtConfig;
+import com.cooperfilme.roteiros.model.User;
+import com.cooperfilme.roteiros.model.UserRole;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
@@ -18,7 +21,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
-
 
 public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 
@@ -62,13 +64,16 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
                         .build()
                         .parseSignedClaims(token);
 
-                String user = claimsJws.getPayload().getSubject();
+                String email = claimsJws.getPayload().getSubject();
                 String role = (String) claimsJws.getPayload().get("role");
 
-                if (user != null) {
+                if (email != null) {
+                    User user = new User();
+                    user.setEmail(email);
+                    user.setRole(UserRole.valueOf(role));
                     return new UsernamePasswordAuthenticationToken(user,
-                    null,
-                    Collections.singletonList(new SimpleGrantedAuthority(role)));
+                            null,
+                            Collections.singletonList(new SimpleGrantedAuthority(role)));
                 }
             } catch (JwtException e) {
                 logger.error("Não foi possível fazer parse do token JWT", e);
